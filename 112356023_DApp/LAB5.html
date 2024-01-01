@@ -1,0 +1,510 @@
+<html>
+
+<head>
+    <!-- import web3 和 jQuery等library -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h3 class="title">Deploy Contract</h3>
+    <input type="button" value="DeployContract" onclick="deployContract()">
+    <p class="hidden-msg" id="contractAddress"></p>
+    <h3 id="addSubject">
+        Add Subject
+    </h3>
+    <p>
+        subjectName: <input id="1_subjectName" type="text">
+    </p>
+    <input type="button" value="AddSubject" onclick="add_Subject()">
+    <p class="hidden-msg" id="addSubjectSuccess" style="background-color:green !important">add subject success!!
+    </p>
+    <p class="hidden-msg" id="addSubjectFail" style="background-color:red !important">add subject fail!!</p>
+    <h3>
+        Put Subject Grade
+    </h3>
+    <p>
+        studentId: <input id="2_studentId" type="text">
+        subjectName: <input id="2_subjectName" type="text">
+        subjectGrade: <input id="2_subjectGrade" type="number">
+    </p>
+    <input type="button" value="PutSubjectGrade" onclick="put_SubjectGrade()">
+    <p class="hidden-msg" id="putSubjectGradeSuccess" style=" background-color:green !important">put subject grade success!!</p>
+    <p class="hidden-msg" id="putSubjectGradeFail" style="background-color:red !important">put subject grade fail!!</p>
+    <h3>
+        Get Grades Sum
+    </h3>
+    <p>
+        studentId: <input id="3_studentId" type="text">
+    </p>
+    <input type="button" value="GetGradesSum" onclick="get_GradesSum()">
+    <p class="hidden-msg" id="gradesSum"></p>
+    <h3>
+        Get Grades Average
+    </h3>
+    <p>
+        studentId: <input id="4_studentId" type="text">
+    </p>
+    <input type="button" value="GetGradesAverage" onclick="getGradesAverage()">
+    <p class="hidden-msg" id="gradesAverage"></p>
+    <h3>
+        Get Subject Grade
+    </h3>
+    <p>
+        studentId: <input id="5_studentId" type="text">
+        subjectName: <input id="5_subjectName" type="text">
+    </p>
+    <input type="button" value="GetSubjectGrade" onclick="getSubjectGrade()">
+    <p class="hidden-msg" id="getSubjectGrade"></p>
+    <h3>
+        Get Class Grades Average
+    </h3>
+    <input type="button" value="GetClassGradesAverage" onclick="getClassGradesAverage()">
+    <p class="hidden-msg" id="classGradesAverage"></p>
+
+</body>
+
+<script>
+    let web3 = new Web3("http://localhost:7545");
+    let contractABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "studentId",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "subjectName",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "subjectGrade",
+				"type": "uint256"
+			}
+		],
+		"name": "SubjectGradeUpdated",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "subjectName",
+				"type": "string"
+			}
+		],
+		"name": "addSubject",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getClassGradesAverage",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "studentId",
+				"type": "address"
+			}
+		],
+		"name": "getGradesAverage",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "studentId",
+				"type": "address"
+			}
+		],
+		"name": "getGradesSum",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "studentId",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "subjectName",
+				"type": "string"
+			}
+		],
+		"name": "getSubjectGrade",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "studentId",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "subjectName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "subjectGrade",
+				"type": "uint256"
+			}
+		],
+		"name": "putSubjectGrade",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "teacher",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+    ]; 
+    let contractAddress = "";
+    let contractBytecode = "608060405234801561001057600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550611597806100606000396000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c80637015e79e1161005b5780637015e79e146100ea578063b46bff891461011a578063b674996814610138578063bbce2507146101685761007d565b80630667867f14610082578063192794711461009e5780631b86ff80146100ce575b600080fd5b61009c60048036038101906100979190610bee565b610186565b005b6100b860048036038101906100b39190610c95565b6102ef565b6040516100c59190610cdb565b60405180910390f35b6100e860048036038101906100e39190610d22565b610385565b005b61010460048036038101906100ff9190610c95565b6105de565b6040516101119190610cdb565b60405180910390f35b61012261077f565b60405161012f9190610da0565b60405180910390f35b610152600480360381019061014d9190610dbb565b6107a3565b60405161015f9190610cdb565b60405180910390f35b6101706108d3565b60405161017d9190610cdb565b60405180910390f35b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610214576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161020b90610e9a565b60405180910390fd5b6002816040516102249190610f2b565b908152602001604051809103902060009054906101000a900460ff1615610280576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161027790610f8e565b60405180910390fd5b6003819080600181540180825580915050600190039060005260206000200160009091909190915090816102b491906111ba565b5060016002826040516102c79190610f2b565b908152602001604051809103902060006101000a81548160ff02191690831515021790555050565b6000816102fa610a05565b8061030a575061030981610a5c565b5b610349576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161034090611324565b60405180910390fd5b6000610354846105de565b905060006003805490501161036a57600061037c565b6003805490508161037b91906113a2565b5b92505050919050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610413576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161040a90610e9a565b60405180910390fd5b6002826040516104239190610f2b565b908152602001604051809103902060009054906101000a900460ff1661047e576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016104759061141f565b60405180910390fd5b60018060008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060010160006101000a81548160ff02191690831515021790555080600160008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600001836040516105299190610f2b565b9081526020016040518091039020819055506004839080600181540180825580915050600190039060005260206000200160009091909190916101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055507fec4e365e8daa6b50e6283e00dca71e141749e0e1394d9f9075b65ea4f3e2975d8383836040516105d193929190611478565b60405180910390a1505050565b6000816105e9610a05565b806105f957506105f881610a5c565b5b610638576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161062f90611324565b60405180910390fd5b6000805b6003805490508110156107745760006003828154811061065f5761065e6114b6565b5b90600052602060002001805461067490610fdd565b80601f01602080910402602001604051908101604052809291908181526020018280546106a090610fdd565b80156106ed5780601f106106c2576101008083540402835291602001916106ed565b820191906000526020600020905b8154815290600101906020018083116106d057829003601f168201915b50505050509050600160008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600001816040516107449190610f2b565b9081526020016040518091039020548361075e91906114e5565b925050808061076c90611519565b91505061063c565b508092505050919050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60006002826040516107b59190610f2b565b908152602001604051809103902060009054906101000a900460ff16610810576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016108079061141f565b60405180910390fd5b600160008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060010160009054906101000a900460ff1661086b5760006108cb565b600160008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020600001826040516108bb9190610f2b565b9081526020016040518091039020545b905092915050565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610964576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161095b90610e9a565b60405180910390fd5b600080600480549050905060005b818110156109e1576109c160048281548110610991576109906114b6565b5b9060005260206000200160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff166105de565b836109cc91906114e5565b925080806109d990611519565b915050610972565b5060038054905081836109f491906113a2565b6109fe91906113a2565b9250505090565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614905090565b60008173ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16149050919050565b6000604051905090565b600080fd5b600080fd5b600080fd5b600080fd5b6000601f19601f8301169050919050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b610afb82610ab2565b810181811067ffffffffffffffff82111715610b1a57610b19610ac3565b5b80604052505050565b6000610b2d610a94565b9050610b398282610af2565b919050565b600067ffffffffffffffff821115610b5957610b58610ac3565b5b610b6282610ab2565b9050602081019050919050565b82818337600083830152505050565b6000610b91610b8c84610b3e565b610b23565b905082815260208101848484011115610bad57610bac610aad565b5b610bb8848285610b6f565b509392505050565b600082601f830112610bd557610bd4610aa8565b5b8135610be5848260208601610b7e565b91505092915050565b600060208284031215610c0457610c03610a9e565b5b600082013567ffffffffffffffff811115610c2257610c21610aa3565b5b610c2e84828501610bc0565b91505092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000610c6282610c37565b9050919050565b610c7281610c57565b8114610c7d57600080fd5b50565b600081359050610c8f81610c69565b92915050565b600060208284031215610cab57610caa610a9e565b5b6000610cb984828501610c80565b91505092915050565b6000819050919050565b610cd581610cc2565b82525050565b6000602082019050610cf06000830184610ccc565b92915050565b610cff81610cc2565b8114610d0a57600080fd5b50565b600081359050610d1c81610cf6565b92915050565b600080600060608486031215610d3b57610d3a610a9e565b5b6000610d4986828701610c80565b935050602084013567ffffffffffffffff811115610d6a57610d69610aa3565b5b610d7686828701610bc0565b9250506040610d8786828701610d0d565b9150509250925092565b610d9a81610c57565b82525050565b6000602082019050610db56000830184610d91565b92915050565b60008060408385031215610dd257610dd1610a9e565b5b6000610de085828601610c80565b925050602083013567ffffffffffffffff811115610e0157610e00610aa3565b5b610e0d85828601610bc0565b9150509250929050565b600082825260208201905092915050565b7f4f6e6c792074686520746561636865722063616e2063616c6c2074686973206d60008201527f6574686f64000000000000000000000000000000000000000000000000000000602082015250565b6000610e84602583610e17565b9150610e8f82610e28565b604082019050919050565b60006020820190508181036000830152610eb381610e77565b9050919050565b600081519050919050565b600081905092915050565b60005b83811015610eee578082015181840152602081019050610ed3565b60008484015250505050565b6000610f0582610eba565b610f0f8185610ec5565b9350610f1f818560208601610ed0565b80840191505092915050565b6000610f378284610efa565b915081905092915050565b7f5375626a65637420616c72656164792065786973747300000000000000000000600082015250565b6000610f78601683610e17565b9150610f8382610f42565b602082019050919050565b60006020820190508181036000830152610fa781610f6b565b9050919050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b60006002820490506001821680610ff557607f821691505b60208210810361100857611007610fae565b5b50919050565b60008190508160005260206000209050919050565b60006020601f8301049050919050565b600082821b905092915050565b6000600883026110707fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff82611033565b61107a8683611033565b95508019841693508086168417925050509392505050565b6000819050919050565b60006110b76110b26110ad84610cc2565b611092565b610cc2565b9050919050565b6000819050919050565b6110d18361109c565b6110e56110dd826110be565b848454611040565b825550505050565b600090565b6110fa6110ed565b6111058184846110c8565b505050565b5b818110156111295761111e6000826110f2565b60018101905061110b565b5050565b601f82111561116e5761113f8161100e565b61114884611023565b81016020851015611157578190505b61116b61116385611023565b83018261110a565b50505b505050565b600082821c905092915050565b600061119160001984600802611173565b1980831691505092915050565b60006111aa8383611180565b9150826002028217905092915050565b6111c382610eba565b67ffffffffffffffff8111156111dc576111db610ac3565b5b6111e68254610fdd565b6111f182828561112d565b600060209050601f8311600181146112245760008415611212578287015190505b61121c858261119e565b865550611284565b601f1984166112328661100e565b60005b8281101561125a57848901518255600182019150602085019450602081019050611235565b868310156112775784890151611273601f891682611180565b8355505b6001600288020188555050505b505050505050565b7f4f6e6c79207468652073747564656e742077686f206f776e732074686573652060008201527f677261646573206f722074686520746561636865722063616e2063616c6c207460208201527f686973206d6574686f6400000000000000000000000000000000000000000000604082015250565b600061130e604a83610e17565b91506113198261128c565b606082019050919050565b6000602082019050818103600083015261133d81611301565b9050919050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601260045260246000fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b60006113ad82610cc2565b91506113b883610cc2565b9250826113c8576113c7611344565b5b828204905092915050565b7f5375626a65637420646f6573206e6f7420657869737400000000000000000000600082015250565b6000611409601683610e17565b9150611414826113d3565b602082019050919050565b60006020820190508181036000830152611438816113fc565b9050919050565b600061144a82610eba565b6114548185610e17565b9350611464818560208601610ed0565b61146d81610ab2565b840191505092915050565b600060608201905061148d6000830186610d91565b818103602083015261149f818561143f565b90506114ae6040830184610ccc565b949350505050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052603260045260246000fd5b60006114f082610cc2565b91506114fb83610cc2565b925082820190508082111561151357611512611373565b5b92915050565b600061152482610cc2565b91507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff820361155657611555611373565b5b60018201905091905056fea26469706673582212205cda102b871f1aa812f2cebf1eb91a2392f6f4915b69096a34b889903d2d0e8664736f6c63430008120033";
+    let contractInstance = "";
+    let defaultAccount = "";
+
+    // 獲取帳號，方便後續發布smart contract
+    init();
+
+    async function init() {
+        // 獲取ganache上的帳號，回傳的型式是長度為10的array，只取第一個做為預設帳號
+        accounts = await web3.eth.getAccounts();
+        defaultAccount = accounts[0];
+        console.log("defaultAccount: " + defaultAccount);
+    }
+
+
+    // 發布smart contract到區塊鏈上，之後才能調用smart contract裡的function
+    function deployContract() {
+        $("#contractAddress").removeClass("msg").addClass("hidden-msg");
+        // 先產生Contract物件
+        contractInstance = new web3.eth.Contract(contractABI);
+
+        // 把contract 發布上去，參數帶contract的bytecode
+        contractInstance.deploy({
+            'data': contractBytecode,
+        })
+            .send({
+                'from': defaultAccount,
+                // 'gas'是指gas limit(上限)的意思，這部分一定要定義，不然transaction會失敗
+                'gas': 3400000
+            })
+            .on('error', function (error) {
+                console.log('error: ', error);
+            })
+            .on('transactionHash', function (transactionHash) {
+                console.log('transactionHash: ', transactionHash);
+            })
+            .on('receipt', function (receipt) {
+                console.log('reciept: ', receipt);
+            })
+            .then(function (newContractInstance) {
+                // 獲得新產生的contract的address，並將它存到contractInstance裡
+                console.log("newContractInstance's address: ", newContractInstance.options.address);
+                contractInstance.options.address = newContractInstance.options.address;
+                // 將contract address顯示在網頁上
+                $("#contractAddress").html("contract address: "+ newContractInstance.options.address).removeClass("hidden-msg").addClass("msg");
+            })
+    }
+
+    // add subject
+    function add_Subject(subjectName) {
+        $("#addSubjectSuccess").removeClass("msg").addClass("hidden-msg");
+        $("#addSubjectFail").removeClass("msg").addClass("hidden-msg");
+        subjectName = $("#1_subjectName").val();
+        /*TODO*/
+        contractInstance.methods.addSubject(subjectName).send({
+            from: defaultAccount,
+            gas: 3400000
+        })
+
+            .on('error', function (error) {
+                console.log('error:', error);
+                $("#addSubjectFail").html("add subject fail" + error).removeClass("hidden-msg").addClass("msg");
+            })
+            .on('transactionHash', function (transactionHash) {
+                console.log('transactionHash: ', transactionHash);
+            })
+            .on('receipt', function (receipt) {
+                console.log('receipt: ', receipt);
+            })
+            .then(function (newContractInstance) {
+                console.log("add subject success");
+                //contract address on html
+                $("#addSubjectSuccess").html("add subject success").removeClass("hidden-msg").addClass("msg");
+
+            })
+
+
+        // 若成功
+        //$("#addSubjectSuccess").removeClass("hidden-msg").addClass("msg");
+        // 若失敗
+        //$('#addSubjectFail').removeClass("hidden-msg").addClass("msg");
+    }
+
+    // put subject grade
+    function put_SubjectGrade(studentId, subjectName, subjectGrade) {
+        $("#putSubjectGradeSuccess").removeClass("msg").addClass("hidden-msg");
+        $("#putSubjectGradeFail").removeClass("msg").addClass("hidden-msg");
+        studentId = $("#2_studentId").val();
+        subjectName = $("#2_subjectName").val();
+        subjectGrade = $("#2_subjectGrade").val();
+        /*TODO*/
+        contractInstance.methods.putSubjectGrade(studentId,subjectName,subjectGrade).send({
+            from: defaultAccount,
+            gas: 3400000
+        })
+
+            .on('error', function (error) {
+                console.log('error:', error);
+                $("#putSubjectGradeFail").html('put Subject Grade Fail'+ error ).removeClass("hidden-msg").addClass("msg");
+            })
+            .on('transactionHash', function (transactionHash) {
+                console.log('transactionHash: ', transactionHash);
+            })
+            .on('receipt', function (receipt) {
+                console.log('receipt: ', receipt);
+            })
+            .then(function (newContractInstance) {
+                console.log("put Subject Grade Success");
+                //contract address on html
+                $("#putSubjectGradeSuccess").html('#put Subject Grade Success').removeClass("hidden-msg").addClass("msg");
+
+            })
+
+        // 若成功
+        // $("#putSubjectGradeSuccess").removeClass("hidden-msg").addClass("msg");
+        // 若失敗
+        // $('#putSubjectGradeFail').removeClass("hidden-msg").addClass("msg");
+    }
+
+    // get grades sum
+    function get_GradesSum(studentId) {
+        $("#gradeSum").removeClass("msg").addClass("hidden-msg");
+        studentId = $("#3_studentId").val();
+        /*TODO*/
+        contractInstance.methods.getGradesSum(studentId).call({
+            from: defaultAccount, studentId,
+            gas: 3400000
+        })
+
+        .then(result => {
+            console.log("get Grade Sum Success");
+            $("#gradesSum").html("grades sum: " + result).removeClass("hidden-msg").addClass("msg");
+        })
+        .catch(error => {
+            console.error('Error calling the contract function: ' + error);
+        });
+        
+        // 若成功
+        // $("#gradesSum").html("grades sum: " + result).removeClass("hidden-msg").addClass("msg");
+}
+
+    // get grades average
+    function getGradesAverage(studentId) {
+        $("#gradeAverage").removeClass("msg").addClass("hidden-msg");
+        studentId = $("#4_studentId").val();
+        /*TODO*/
+        
+        contractInstance.methods.getGradesAverage(studentId).call({
+            from: defaultAccount ,studentId,
+            gas: 3400000
+        })
+
+            .then(result => {
+                console.log("get Grade Average Success");
+                $("#gradesAverage").html("grades average: " + result).removeClass("hidden-msg").addClass("msg");
+            })
+            .catch(error => {
+                console.error('Error calling the contract function: ' + error);
+            });
+        
+        
+
+        // 若成功
+        // $("#gradesAverage").html("grades average: " + result).removeClass("hidden-msg").addClass("msg");
+    }
+
+    function getSubjectGrade(studentId, subjectName) {
+        $("#getSubjectGrade").removeClass("msg").addClass("hidden-msg");
+        studentId = $("#5_studentId").val();
+        subjectName = $("#5_subjectName").val();
+        /*TODO*/
+
+        contractInstance.methods.getSubjectGrade(studentId,subjectName).call({
+            from: defaultAccount,studentId,
+            gas: 3400000
+        })
+
+            .then(result => {
+                console.log("get Subject Grade Success");
+                $("#getSubjectGrade").html("subject grade: " + result).removeClass("hidden-msg").addClass("msg");
+            })
+            .catch(error => {
+                console.error('Error calling the contract function: ' + error);
+            });
+        
+
+
+        // 若成功
+        // $("#getSubjectGrade").html("subject grade: " + result).removeClass("hidden-msg").addClass("msg");
+    }
+
+    //get class average
+    function getClassGradesAverage() {
+        $("#classGradesAverage").removeClass("msg").addClass("hidden-msg");
+        /*TODO*/
+
+        contractInstance.methods.getClassGradesAverage().call({
+            from: defaultAccount,
+            gas: 3400000
+        })
+
+            .then(result => {
+                console.log("get Class Grades Average Success");
+                $("#classGradesAverage").html("class average: " + result).removeClass("hidden-msg").addClass("msg");
+            })
+            .catch(error => {
+                console.error('Error calling the contract function: ' + error);
+            });
+
+
+        // 若成功
+        // $("#classGradesAverage").html("class average: " + result).removeClass("hidden-msg").addClass("msg");
+    }
+</script>
+
+<style type="text/css">
+    .title {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    input[type=button] {
+        border-radius: 5px;
+        border: 0px;
+        margin: 10px;
+        background-color: cadetblue;
+        color: white;
+        padding: 10px;
+    }
+
+    input[type=button]:hover {
+        background-color: white;
+        color: cadetblue;
+        background-color: white;
+    }
+
+    input[type=text] {
+        border-radius: 5px;
+        border: 2px solid gray;
+        padding: 5px;
+    }
+
+    input[type=number] {
+        border-radius: 5px;
+        border: 2px solid gray;
+        padding: 5px;
+    }
+
+    .msg {
+        background-color: green;
+        color: aliceblue;
+        border-radius: 5px;
+        padding: 10px;
+
+        animation: fadeIn 1s;
+    }
+
+    .hidden-msg {
+        display: none;
+
+        animation: fadeOut 1s;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+        }
+    }
+</style>
+
+</html>
